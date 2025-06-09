@@ -136,6 +136,7 @@ class WebScrapingEngine {
     }
 
     async scrapeProduct(productName, url) {
+        let onlyOnePage = true;
         let nextPage = true;
         let objects = [];
         let currentUrl = url;
@@ -180,10 +181,9 @@ class WebScrapingEngine {
                     currentUrl = null;
                 }
 
-                if (currentUrl == null) {
+                if (onlyOnePage || currentUrl == null) {
                     nextPage = false;
                 }
-
                 await this.driver.sleep(2000); // Add delay between pages
             } catch (error) {
                 this.socket.emit('error', { 

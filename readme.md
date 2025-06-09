@@ -49,8 +49,8 @@ webscraping-app/
 
 ## Prerequisites
 
-1. **Node.js** (v16 or higher)
-2. **Angular CLI** (v16 or higher)
+1. **Node.js** (**v16** or higher)
+2. **Angular CLI** (**v16** or higher)
 3. **Microsoft Edge Browser** (latest version)
 4. **EdgeDriver** (compatible with your Edge version)
 
