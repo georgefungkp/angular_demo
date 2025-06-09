@@ -1,0 +1,246 @@
+<div class="container-fluid">
+  <div class="row">
+    <!-- Header -->
+    <div class="col-12">
+      <nav class="navbar navbar-dark bg-dark">
+        <div class="navbar-brand">
+          <i class="fas fa-spider"></i> {{ title }}
+        </div>
+        <div class="navbar-text">
+          <span class="badge" [ngClass]="isConnected ? 'badge-success' : 'badge-danger'">
+            <i class="fas" [ngClass]="isConnected ? 'fa-check-circle' : 'fa-times-circle'"></i>
+            {{ connectionStatus }}
+          </span>
+          <button class="btn btn-sm btn-outline-light ml-2" (click)="reconnect()" [disabled]="isConnected">
+            <i class="fas fa-sync-alt"></i> Reconnect
+          </button>
+        </div>
+      </nav>
+    </div>
+  </div>
+
+  <div class="row mt-3">
+    <!-- Control Panel -->
+    <div class="col-md-4">
+      <div class="card">
+        <div class="card-header">
+          <h5><i class="fas fa-cogs"></i> Control Panel</h5>
+        </div>
+        <div class="card-body">
+          <!-- Product Selection -->
+          <div class="mb-3">
+            <h6>Select Products to Scrape:</h6>
+            <div class="mb-2">
+              <button class="btn btn-sm btn-outline-primary mr-2" (click)="selectAllProducts()">
+                Select All
+              </button>
+              <button class="btn btn-sm btn-outline-secondary" (click)="deselectAllProducts()">
+                Deselect All
+              </button>
+            </div>
+            <div class="product-list" style="max-height: 200px; overflow-y: auto;">
+              <div class="form-check" *ngFor="let product of availableProducts">
+                <input class="form-check-input" type="checkbox"
+                       [id]="product"
+                       [checked]="isProductSelected(product)"
+                       (change)="toggleProductSelection(product)">
+                <label class="form-check-label" [for]="product">
+                  {{ product}}
+                </label>
+              </div>
+            </div>
+            <small class="text-muted">
+              {{ selectedProducts.length }} of {{ availableProducts.length }} selected
+            </small>
+          </div>
+
+          <!-- Controls -->
+          <div class="mb-3">
+            <button class="btn btn-success btn-block"
+                    (click)="startScraping()"
+                    [disabled]="!isConnected || isScrapingRunning || selectedProducts.length === 0">
+              <i class="fas fa-play"></i> Start Scraping
+            </button>
+            <button class="btn btn-danger btn-block mt-2"
+                    (click)="stopScraping()"
+                    [disabled]="!isConnected || !isScrapingRunning">
+              <i class="fas fa-stop"></i> Stop Scraping
+            </button>
+          </div>
+          <div class="mb-3">
+              <button class="btn btn-outline-warning btn-sm btn-block" (click)="clearLogs()">
+                <i class="fas fa-trash"></i> Clear Logs
+              </button>
+              <button class="btn btn-outline-info btn-sm btn-block mt-2" (click)="clearResults()">
+                <i class="fas fa-broom"></i> Clear Results
+              </button>
+          </div>
+
+          <!-- Progress -->
+          <div *ngIf="isScrapingRunning" class="mb-3">
+            <h6>Progress:</h6>
+            <div class="progress mb-2">
+              <div class="progress-bar progress-bar-striped progress-bar-animated"
+                   [style.width.%]="getProgressPercentage()"
+                   [attr.aria-valuenow]="getProgressPercentage()"
+                   aria-valuemin="0"
+                   aria-valuemax="100">
+                {{ getProgressPercentage() }}%
+              </div>
+            </div>
+            <small class="text-muted">{{ scrapingProgress.message }}</small>
+          </div>
+
+          <!-- Statistics -->
+          <div class="card bg-light">
+            <div class="card-body">
+              <h6 class="card-title">Statistics</h6>
+              <div class="row">
+                <div class="col-4 text-center">
+                  <div class="h4 text-primary">{{ stats.completedProducts }}/{{ stats.totalProducts }}</div>
+                  <small>Products</small>
+                </div>
+                <div class="col-4 text-center">
+                  <div class="h4 text-success">{{ stats.totalItems }}</div>
+                  <small>Items Found</small>
+                </div>
+                <div class="col-4 text-center">
+                  <div class="h4 text-info">{{ currentResults.length }}</div>
+                  <small>Current</small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="col-md-8">
+      <!-- Live Results -->
+      <div class="card mb-3" *ngIf="currentResults.length > 0 || isScrapingRunning">
+        <div class="card-header">
+          <h5><i class="fas fa-list"></i> Live Results ({{ currentResults.length }} items)</h5>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+            <table class="table table-sm table-striped">
+              <thead class="thead-dark sticky-top">
+                <tr>
+                  <th>Name</th>
+                  <th>Price</th>
+                  <th>Rating</th>
+                  <th>Address</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let item of currentResults; let i = index">
+                  <td>{{ item.name }}</td>
+                  <td class="text-success font-weight-bold">{{ item.price }}</td>
+                  <td>
+                    <span class="badge badge-warning" *ngIf="item.star">
+                      {{ item.star }} <i class="fas fa-star"></i>
+                    </span>
+                  </td>
+                  <td>
+                    <small>{{ item.addr }}</small>
+                  </td>
+                  <td>
+                    <a [href]="item.buyURL" target="_blank" class="btn btn-sm btn-outline-primary"
+                       *ngIf="item.buyURL" title="Visit Store">
+                      <i class="fas fa-external-link-alt"></i>
+                    </a>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Completed Results -->
+      <div class="card mb-3" *ngIf="scrapingResults.length > 0">
+        <div class="card-header">
+          <h5><i class="fas fa-check-circle"></i> Completed Results</h5>
+        </div>
+        <div class="card-body">
+          <div class="accordion" id="resultsAccordion">
+            <div class="card" *ngFor="let result of scrapingResults; let i = index">
+              <div class="card-header" [id]="'heading' + i">
+                <h2 class="mb-0">
+                  <button class="btn btn-link" type="button" data-toggle="collapse"
+                          [attr.data-target]="'#collapse' + i"
+                          [attr.aria-controls]="'collapse' + i">
+                    <i class="fas fa-box"></i> {{ result.product}}
+                    <span class="badge badge-success ml-2">{{ result.count }} items</span>
+                  </button>
+                </h2>
+              </div>
+              <div [id]="'collapse' + i" class="collapse"
+                   [attr.aria-labelledby]="'heading' + i"
+                   data-parent="#resultsAccordion">
+                <div class="card-body">
+                  <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                    <table class="table table-sm table-hover">
+                      <thead class="thead-light sticky-top">
+                        <tr>
+                          <th>#</th>
+                          <th>Name</th>
+                          <th>Price</th>
+                          <th>Rating</th>
+                          <th>Address</th>
+                          <th>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr *ngFor="let item of result.items; let j = index">
+                          <td>{{ j + 1 }}</td>
+                          <td>{{ item.name }}</td>
+                          <td class="text-success font-weight-bold">{{ item.price }}</td>
+                          <td>
+                            <span class="badge badge-warning" *ngIf="item.star">
+                              {{ item.star }} <i class="fas fa-star"></i>
+                            </span>
+                          </td>
+                          <td>
+                            <small>{{ item.addr }}</small>
+                          </td>
+                          <td>
+                            <a [href]="item.buyURL" target="_blank"
+                               class="btn btn-sm btn-outline-primary"
+                               *ngIf="item.buyURL" title="Visit Store">
+                              <i class="fas fa-external-link-alt"></i>
+                            </a>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Logs -->
+      <div class="card">
+        <div class="card-header">
+          <h5><i class="fas fa-terminal"></i> Activity Logs ({{ logs.length }})</h5>
+        </div>
+        <div class="card-body">
+          <div class="log-container" style="height: 300px; overflow-y: auto; background-color: #f8f9fa; padding: 10px; border-radius: 5px;">
+            <div *ngIf="logs.length === 0" class="text-muted text-center">
+              <i class="fas fa-info-circle"></i> No logs available
+            </div>
+            <div *ngFor="let log of logs" class="log-entry"
+                 [ngClass]="{'text-danger': log.includes('Error'), 'text-success': log.includes('completed')}">
+              <code>{{ log }}</code>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
