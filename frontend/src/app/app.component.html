@@ -68,8 +68,8 @@
             </button>
           </div>
           <div class="mb-3">
-              <button class="btn btn-outline-warning btn-sm btn-block" (click)="clearLogs()">
-                <i class="fas fa-trash"></i> Clear Logs
+              <button class="btn btn-outline-warning btn-sm btn-block" (click)="clearactivityLogs()">
+                <i class="fas fa-trash"></i> Clear Activity Logs
               </button>
               <button class="btn btn-outline-info btn-sm btn-block mt-2" (click)="clearResults()">
                 <i class="fas fa-broom"></i> Clear Results
@@ -118,7 +118,7 @@
     <!-- Main Content -->
     <div class="col-md-8">
       <!-- Live Results -->
-      <div class="card mb-3" *ngIf="currentResults.length > 0 || isScrapingRunning">
+      <div class="card mb-3">
         <div class="card-header">
           <h5><i class="fas fa-list"></i> Live Results ({{ currentResults.length }} items)</h5>
         </div>
@@ -227,16 +227,16 @@
       <!-- Logs -->
       <div class="card">
         <div class="card-header">
-          <h5><i class="fas fa-terminal"></i> Activity Logs ({{ logs.length }})</h5>
+          <h5><i class="fas fa-terminal"></i> Activity Logs ({{ activityLogs.length }})</h5>
         </div>
         <div class="card-body">
           <div class="log-container" style="height: 300px; overflow-y: auto; background-color: #f8f9fa; padding: 10px; border-radius: 5px;">
-            <div *ngIf="logs.length === 0" class="text-muted text-center">
+            <div *ngIf="activityLogs.length === 0" class="text-muted text-center">
               <i class="fas fa-info-circle"></i> No logs available
             </div>
-            <div *ngFor="let log of logs" class="log-entry"
+            <div *ngFor="let log of activityLogs" class="log-entry"
                  [ngClass]="{'text-danger': log.includes('Error'), 'text-success': log.includes('completed')}">
-              <code>{{ log }}</code>
+              <code>{{ log }}</code>   <!-- Changed from activityLogs to log -->
             </div>
           </div>
         </div>

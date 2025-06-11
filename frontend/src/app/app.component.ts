@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { WebScrapingService } from './services/web-scraping.service';
 import { Subscription } from 'rxjs';
 
+
 export interface ScrapingResult {
   product: string;
   count: number;
@@ -58,8 +59,8 @@ export class AppComponent implements OnInit, OnDestroy {
   currentResults: ScrapingItem[] = [];
   totalItemsFound = 0;
 
-  // Logs
-  logs: string[] = [];
+  // Activity Logs
+  activityLogs: string[] = [];
 
   // Statistics
   stats = {
@@ -71,6 +72,7 @@ export class AppComponent implements OnInit, OnDestroy {
   private subscriptions: Subscription[] = [];
 
   constructor(private webScrapingService: WebScrapingService) {}
+
 
   ngOnInit() {
     this.initializeWebSocket();
@@ -151,6 +153,18 @@ export class AppComponent implements OnInit, OnDestroy {
       this.webScrapingService.onScrapingComplete().subscribe(data => {
         this.isScrapingRunning = false;
         this.scrapingResults = data.results;
+        // Reset current results first
+        this.currentResults = [];
+
+        // Update current results with the latest product's items
+        if (this.scrapingResults.length > 0) {
+          const lastResult = this.scrapingResults[this.scrapingResults.length - 1];
+          this.currentResults = lastResult.items;
+        } else {
+          this.currentResults = [];
+        }
+
+
         this.addLog(`Scraping completed! File saved: ${data.fileName}`);
         this.addLog(`Total: ${data.totalProducts} products, ${this.stats.totalItems} items`);
       })
@@ -214,8 +228,8 @@ export class AppComponent implements OnInit, OnDestroy {
     return this.selectedProducts.includes(product);
   }
 
-  clearLogs() {
-    this.logs = [];
+  clearactivityLogs() {
+    this.activityLogs = [];
   }
 
   clearResults() {
@@ -227,11 +241,11 @@ export class AppComponent implements OnInit, OnDestroy {
   private addLog(message: string, type: 'info' | 'error' | 'success' = 'info') {
     const timestamp = new Date().toLocaleTimeString();
     const logEntry = `[${timestamp}] ${message}`;
-    this.logs.unshift(logEntry);
+    this.activityLogs.unshift(logEntry);
 
-    // Keep only last 100 logs
-    if (this.logs.length > 100) {
-      this.logs = this.logs.slice(0, 100);
+    // Keep only last 100 activityLogs
+    if (this.activityLogs.length > 100) {
+      this.activityLogs = this.activityLogs.slice(0, 100);
     }
   }
 

@@ -1,6 +1,7 @@
-import { Injectable } from '@angular/core';
+import { Injectable, NgZone } from '@angular/core';
 import { io, Socket } from 'socket.io-client';
 import { Observable, Subject, BehaviorSubject } from 'rxjs';
+
 
 @Injectable({
   providedIn: 'root'
@@ -8,7 +9,7 @@ import { Observable, Subject, BehaviorSubject } from 'rxjs';
 export class WebScrapingService {
   private socket: Socket | null = null;
   private serverUrl = 'http://localhost:3000';
-  
+
   // Subjects for different events
   private connectionStatus = new BehaviorSubject<boolean>(false);
   private availableProducts = new Subject<string[]>();
@@ -20,7 +21,7 @@ export class WebScrapingService {
   private status = new Subject<any>();
   private error = new Subject<any>();
 
-  constructor() {}
+  constructor(private ngZone: NgZone) {}
 
   connect() {
     if (this.socket?.connected) {
@@ -33,64 +34,89 @@ export class WebScrapingService {
     });
 
     this.socket.on('connect', () => {
-      console.log('Connected to WebSocket server');
-      this.connectionStatus.next(true);
+      this.ngZone.run(() => {
+        console.log('Connected to WebSocket server');
+        this.connectionStatus.next(true);
+      });
     });
 
     this.socket.on('disconnect', () => {
-      console.log('Disconnected from WebSocket server');
-      this.connectionStatus.next(false);
+      this.ngZone.run(() => {
+        console.log('Disconnected from WebSocket server');
+        this.connectionStatus.next(false);
+      });
     });
 
     this.socket.on('connected', (data) => {
-      console.log('Server connection confirmed:', data);
-      this.availableProducts.next(data.availableProducts);
+      this.ngZone.run(() => {
+        console.log(data.message);
+        console.log('Server connection confirmed:', data);
+        this.availableProducts.next(data.availableProducts);
+      });
     });
 
     this.socket.on('products_list', (data) => {
-      console.log('Received products list:', data);
-      this.availableProducts.next(data.products);
+      this.ngZone.run(() => {
+        console.log('Received products list:', data);
+        this.availableProducts.next(data.products);
+      });
     });
 
     this.socket.on('scraping_started', (data) => {
-      console.log('Scraping started:', data);
-      this.scrapingStarted.next(data);
+      this.ngZone.run(() => {
+        console.log('Scraping started:', data);
+        this.scrapingStarted.next(data);
+      });
     });
 
     this.socket.on('progress', (data) => {
-      console.log('Progress update:', data);
-      this.progress.next(data);
+      this.ngZone.run(() => {
+        console.log('Progress update:', data);
+        this.progress.next(data);
+      });
     });
 
     this.socket.on('item_found', (data) => {
-      console.log('Item found:', data);
-      this.itemFound.next(data);
+      this.ngZone.run(() => {
+        console.log('Item found:', data);
+        this.itemFound.next(data);
+      });
     });
 
     this.socket.on('product_complete', (data) => {
-      console.log('Product complete:', data);
-      this.productComplete.next(data);
+      this.ngZone.run(() => {
+        console.log('Product complete:', data);
+        this.productComplete.next(data);
+      });
     });
 
     this.socket.on('scraping_complete', (data) => {
-      console.log('Scraping complete:', data);
-      this.scrapingComplete.next(data);
+      this.ngZone.run(() => {
+        console.log('Scraping complete:', data);
+        this.scrapingComplete.next(data);
+      });
     });
 
     this.socket.on('status', (data) => {
-      console.log('Status update:', data);
-      this.status.next(data);
+      this.ngZone.run(() => {
+        console.log('Status update:', data);
+        this.status.next(data);
+      });
     });
 
     this.socket.on('error', (data) => {
-      console.error('Server error:', data);
-      this.error.next(data);
+      this.ngZone.run(() => {
+        console.error('Server error:', data);
+        this.error.next(data);
+      });
     });
 
     this.socket.on('connect_error', (error) => {
-      console.error('Connection error:', error);
-      this.connectionStatus.next(false);
-      this.error.next({ message: 'Failed to connect to server', type: 'error' });
+      this.ngZone.run(() => {
+        console.error('Connection error:', error);
+        this.connectionStatus.next(false);
+        this.error.next({ message: 'Failed to connect to server', type: 'error' });
+      });
     });
   }
 
