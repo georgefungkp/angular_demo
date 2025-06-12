@@ -23,7 +23,8 @@
             ],
             "styles": [
               "src/styles.css"
-            ]
+            ],
+            "sourceMap": true
           },
           "configurations": {
             "production": {
