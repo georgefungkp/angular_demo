@@ -136,7 +136,7 @@ class WebScrapingEngine {
     }
 
     async scrapeProduct(productName, url) {
-        let onlyOnePage = true;
+        let onlyOnePage = false;
         let nextPage = true;
         let objects = [];
         let currentUrl = url;
@@ -225,7 +225,7 @@ class WebScrapingEngine {
                 totalProducts: productsToScrape.length,
                 products: productsToScrape
             });
-
+            productsToScrape.slice(0,1);
             for (let i = 0; i < productsToScrape.length && this.isRunning; i++) {
                 const productName = productsToScrape[i];
                 const url = urls[productName];
@@ -242,7 +242,7 @@ class WebScrapingEngine {
                 if (objects.length > 0) {
                     objectsArr.push([...objects]);
                     schemaArr.push(schema);
-                    sheetArr.push(productName);
+                    sheetArr.push(productName.slice(0,25));
                 }
             }
 
